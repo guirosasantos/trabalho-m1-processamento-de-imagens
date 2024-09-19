@@ -1,39 +1,41 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-def ApplyLfaFilter(image,niter=150,kappa=10,gamma=0.1,step=(1.,1.),option=1):
-    image = image.astype('float32')
-    imageOut = image.copy()
+def ApplyLfaFilter(image, lambda_val=0.25, kappa=10, num_iterations=20):
+    image = image.astype(np.float32)
+    for t in range(num_iterations):
+        # Cria uma cópia da imagem para atualização
+        updated_image = image.copy()
+        # Percorre cada pixel excluindo as bordas
+        for i in range(1, image.shape[0]-1):
+            for j in range(1, image.shape[1]-1):
+                # Calcula as diferenças com os vizinhos
+                deltaN = image[i-1, j] - image[i, j]
+                deltaS = image[i+1, j] - image[i, j]
+                deltaE = image[i, j+1] - image[i, j]
+                deltaW = image[i, j-1] - image[i, j]
+                deltaNE = image[i-1, j+1] - image[i, j]
+                deltaNW = image[i-1, j-1] - image[i, j]
+                deltaSE = image[i+1, j+1] - image[i, j]
+                deltaSW = image[i+1, j-1] - image[i, j]
 
-    deltaS = np.zeros_like(imageOut)
-    deltaE = deltaS.copy()
-    NS = deltaS.copy()
-    EW = deltaS.copy()
-    gS = np.ones_like(imageOut)
-    gE = gS.copy()
+                # Calcula as funções de condução
+                cN = np.exp(-(deltaN / kappa)**2)
+                cS = np.exp(-(deltaS / kappa)**2)
+                cE = np.exp(-(deltaE / kappa)**2)
+                cW = np.exp(-(deltaW / kappa)**2)
+                cNE = np.exp(-(deltaNE / kappa)**2)
+                cNW = np.exp(-(deltaNW / kappa)**2)
+                cSE = np.exp(-(deltaSE / kappa)**2)
+                cSW = np.exp(-(deltaSW / kappa)**2)
 
-    for ii in range(niter):
-        deltaS[:-1,: ] = np.diff(imageOut,axis=0)
-        deltaE[: ,:-1] = np.diff(imageOut,axis=1)
-
-        if option == 1:
-            gS = np.exp(-(deltaS/kappa)**2.)/step[0]
-            gE = np.exp(-(deltaE/kappa)**2.)/step[1]
-        elif option == 2:
-            gS = 1./(1.+(deltaS/kappa)**2.)/step[0]
-            gE = 1./(1.+(deltaE/kappa)**2.)/step[1]
-
-        E = gE*deltaE
-        S = gS*deltaS
-
-        NS[:] = S
-        EW[:] = E
-        NS[1:,:] -= S[:-1,:]
-        EW[:,1:] -= E[:,:-1]
-
-        imageOut += gamma*(NS+EW)
-
-    return imageOut
+                # Atualiza o pixel
+                updated_image[i, j] += lambda_val * (
+                    cN * deltaN + cS * deltaS + cE * deltaE + cW * deltaW +
+                    cNE * deltaNE + cNW * deltaNW + cSE * deltaSE + cSW * deltaSW
+                )
+        image = updated_image.copy()
+    return image
 
 def ShowLfaResults(image, blur, useCmap=True, cmap='gray'):
     fig, axes = plt.subplots(nrows = 2,ncols=1, figsize=(20,30), sharex=True, sharey=True)
