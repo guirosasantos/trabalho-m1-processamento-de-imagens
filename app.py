@@ -10,6 +10,7 @@ height, width = originalImage.shape
 
 cv2.imshow('Imagem original', originalImage)
 cv2.waitKey(0)
+print("Clicado")
 
 #* Primeira parte: Implementação do Filtro de Difusão Anisotrópica (FDA) 
 
