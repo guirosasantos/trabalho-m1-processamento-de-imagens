@@ -1,39 +1,52 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-def ApplyLfaFilter(image, lambda_val=0.25, kappa=10, num_iterations=20):
+def CalculateW(lambda_val, kappa, alfa, beta):
+    # Cálculo correto do fator da exponencial
+    fator = ((abs(alfa-beta))**(1/5)/lambda_val)/5
+
+    # Cálculo do valor de w com o expoente correto
+    w = (1 - np.exp(-8 * kappa * np.exp(-fator))) / 8
+
+    return w
+
+def CalculateWc(w1, w2, w3, w4, w6, w7, w8, w9):
+    return 1 - (w1 + w2 + w3 + w4 + w6 + w7 + w8 + w9)
+
+
+def ApplyLfaFilter(image, lambda_val=0.25, kappa=10, num_iterations=10):
     image = image.astype(np.float32)
     for t in range(num_iterations):
-        # Cria uma cópia da imagem para atualização
+        print(f"Iteração {t+1}")
         updated_image = image.copy()
-        # Percorre cada pixel excluindo as bordas
-        for i in range(1, image.shape[0]-1):
-            for j in range(1, image.shape[1]-1):
-                # Calcula as diferenças com os vizinhos
-                deltaN = image[i-1, j] - image[i, j]
-                deltaS = image[i+1, j] - image[i, j]
-                deltaE = image[i, j+1] - image[i, j]
-                deltaW = image[i, j-1] - image[i, j]
-                deltaNE = image[i-1, j+1] - image[i, j]
-                deltaNW = image[i-1, j-1] - image[i, j]
-                deltaSE = image[i+1, j+1] - image[i, j]
-                deltaSW = image[i+1, j-1] - image[i, j]
+        kernel = np.zeros((3, 3))
+        for x in range(1, image.shape[0]-1):
+            for y in range(1, image.shape[1]-1):
 
-                # Calcula as funções de condução
-                cN = np.exp(-(deltaN / kappa)**2)
-                cS = np.exp(-(deltaS / kappa)**2)
-                cE = np.exp(-(deltaE / kappa)**2)
-                cW = np.exp(-(deltaW / kappa)**2)
-                cNE = np.exp(-(deltaNE / kappa)**2)
-                cNW = np.exp(-(deltaNW / kappa)**2)
-                cSE = np.exp(-(deltaSE / kappa)**2)
-                cSW = np.exp(-(deltaSW / kappa)**2)
+                pixelCentral = image[x, y]
+                w1 = CalculateW(lambda_val, kappa, pixelCentral, image[x-1, y+1])
+                w2 = CalculateW(lambda_val, kappa, pixelCentral, image[x, y+1])
+                w3 = CalculateW(lambda_val, kappa, pixelCentral, image[x+1, y+1])
+                w4 = CalculateW(lambda_val, kappa, pixelCentral, image[x-1, y])
+                w6 = CalculateW(lambda_val, kappa, pixelCentral, image[x+1, y])
+                w7 = CalculateW(lambda_val, kappa, pixelCentral, image[x-1, y-1])
+                w8 = CalculateW(lambda_val, kappa, pixelCentral, image[x, y-1])
+                w9 = CalculateW(lambda_val, kappa, pixelCentral, image[x+1, y-1])
 
-                # Atualiza o pixel
-                updated_image[i, j] += lambda_val * (
-                    cN * deltaN + cS * deltaS + cE * deltaE + cW * deltaW +
-                    cNE * deltaNE + cNW * deltaNW + cSE * deltaSE + cSW * deltaSW
-                )
+                pixelCentral = CalculateWc(w1, w2, w3, w4, w6, w7, w8, w9)
+
+                kernel[0, 0] = w1
+                kernel[0, 1] = w2
+                kernel[0, 2] = w3
+                kernel[1, 0] = w4
+                kernel[1, 1] = pixelCentral
+                kernel[1, 2] = w6
+                kernel[2, 0] = w7
+                kernel[2, 1] = w8
+                kernel[2, 2] = w9
+
+                updated_image[x, y] = np.sum(kernel * image[x-1:x+2, y-1:y+2])
+
         image = updated_image.copy()
     return image
 
