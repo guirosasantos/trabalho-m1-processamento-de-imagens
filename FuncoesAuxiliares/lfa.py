@@ -1,21 +1,22 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-def CalculateW(lambda_val, kappa, alfa, beta):
-    # Cálculo correto do fator da exponencial
-    fator = ((abs(alfa-beta))**(1/5)/lambda_val)/5
+def LookUpTable(lambda_val, kappa):
+    lut = [0] * 256
+    for i in range(len(lut)):
+        fator = (i ** (1 / 5) / lambda_val) / 5
+        w = (1 - np.exp(-8 * kappa * np.exp(-fator))) / 8
+        lut[i] = w
+    return lut
 
-    # Cálculo do valor de w com o expoente correto
-    w = (1 - np.exp(-8 * kappa * np.exp(-fator))) / 8
-
-    return w
 
 def CalculateWc(w1, w2, w3, w4, w6, w7, w8, w9):
     return 1 - (w1 + w2 + w3 + w4 + w6 + w7 + w8 + w9)
 
 
-def ApplyLfaFilter(image, lambda_val=0.25, kappa=10, num_iterations=10):
+def ApplyLfaFilter(image, lambda_val=0.25, kappa=10, num_iterations=8):
     image = image.astype(np.float32)
+    lut = LookUpTable(lambda_val, kappa)
     for t in range(num_iterations):
         print(f"Iteração {t+1}")
         updated_image = image.copy()
@@ -24,14 +25,15 @@ def ApplyLfaFilter(image, lambda_val=0.25, kappa=10, num_iterations=10):
             for y in range(1, image.shape[1]-1):
 
                 pixelCentral = image[x, y]
-                w1 = CalculateW(lambda_val, kappa, pixelCentral, image[x-1, y+1])
-                w2 = CalculateW(lambda_val, kappa, pixelCentral, image[x, y+1])
-                w3 = CalculateW(lambda_val, kappa, pixelCentral, image[x+1, y+1])
-                w4 = CalculateW(lambda_val, kappa, pixelCentral, image[x-1, y])
-                w6 = CalculateW(lambda_val, kappa, pixelCentral, image[x+1, y])
-                w7 = CalculateW(lambda_val, kappa, pixelCentral, image[x-1, y-1])
-                w8 = CalculateW(lambda_val, kappa, pixelCentral, image[x, y-1])
-                w9 = CalculateW(lambda_val, kappa, pixelCentral, image[x+1, y-1])
+                w1 = lut[int(abs(pixelCentral - image[x-1, y+1]))]
+                w1 = lut[int(abs(pixelCentral - image[x-1, y+1]))]
+                w2 = lut[int(abs(pixelCentral - image[x, y+1]))]
+                w3 = lut[int(abs(pixelCentral - image[x+1, y+1]))]
+                w4 = lut[int(abs(pixelCentral - image[x-1, y]))]
+                w6 = lut[int(abs(pixelCentral - image[x+1, y]))]
+                w7 = lut[int(abs(pixelCentral - image[x-1, y-1]))]
+                w8 = lut[int(abs(pixelCentral - image[x, y-1]))]
+                w9 = lut[int(abs(pixelCentral - image[x+1, y-1]))]
 
                 pixelCentral = CalculateWc(w1, w2, w3, w4, w6, w7, w8, w9)
 
