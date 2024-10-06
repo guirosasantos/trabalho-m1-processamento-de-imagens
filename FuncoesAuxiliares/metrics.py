@@ -9,4 +9,5 @@ def CalculateMetrics(original, altered):
     
     psnrValue = peak_signal_noise_ratio(original, altered, data_range=data_range)
     mseValue = mean_squared_error(original, altered)
-    return psnrValue, mseValue
+    rmseValue = np.sqrt(mseValue)
+    return psnrValue, mseValue, rmseValue
