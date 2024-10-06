@@ -5,7 +5,6 @@ import numpy as np
 from FuncoesAuxiliares import metrics, gaussianFilter, sobelFilter, cannyEdgeDetection
 
 originalImage = cv2.imread('Images/imagem-da-lib.png', cv2.IMREAD_GRAYSCALE)
-height, width = originalImage.shape
 
 # Mostrando a imagem original
 

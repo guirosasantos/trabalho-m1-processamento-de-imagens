@@ -1,1 +1,1 @@
-# trabalho-m1-processamento-de-imagens
+# trabalho-m2-processamento-de-imagens
