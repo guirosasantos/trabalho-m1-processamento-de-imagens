@@ -116,10 +116,10 @@ cannyGaussianPassHighFilteredImage = cannyEdgeDetection.ApplyCannyEdgeDetection(
 
 # Mostrando os resultados
 
-gaussianFilter.showGaussianResults(cannyFilteredImage, cannyGaussianFilteredImage, "Imagem com Filtro de Canny", "Imagem com Filtro Gaussiano e Canny")
-gaussianFilter.showGaussianResults(cannyFilteredImage, cannyIdealPassLowFilteredImage, "Imagem com Filtro de Canny", "Imagem com Filtro Passa Baixa Ideal e Canny")
-gaussianFilter.showGaussianResults(cannyFilteredImage, cannyGaussianPassLowFilteredImage, "Imagem com Filtro de Canny", "Imagem com Filtro Passa Baixa Gaussiano e Canny")
-gaussianFilter.showGaussianResults(cannyFilteredImage, cannySobelFilteredImage, "Imagem com Filtro de Canny", "Imagem com Filtro de Sobel e Canny")
-gaussianFilter.showGaussianResults(cannyFilteredImage, cannyIdealPassHighFilteredImage, "Imagem com Filtro de Canny", "Imagem com Filtro Passa Alta Ideal e Canny")
-gaussianFilter.showGaussianResults(cannyFilteredImage, cannyGaussianPassHighFilteredImage, "Imagem com Filtro de Canny", "Imagem com Filtro Passa Alta Gaussiano e Canny")
+gaussianFilter.showGaussianResults(cannyFilteredImage, cannyGaussianFilteredImage, "Gauss + Canny", "Original Canny")
+gaussianFilter.showGaussianResults(cannyFilteredImage, cannyIdealPassLowFilteredImage, "Ideal Low Pass + Canny", "Original Canny")
+gaussianFilter.showGaussianResults(cannyFilteredImage, cannyGaussianPassLowFilteredImage, "Gaussian Low Pass + Canny", "Original Canny")
+gaussianFilter.showGaussianResults(cannyFilteredImage, cannySobelFilteredImage, "Sobel + Canny", "Original Canny")
+gaussianFilter.showGaussianResults(cannyFilteredImage, cannyIdealPassHighFilteredImage, "Ideal High Pass + Canny", "Original Canny")
+gaussianFilter.showGaussianResults(cannyFilteredImage, cannyGaussianPassHighFilteredImage, "Gaussian High Pass + Canny", "Original Canny")
 
