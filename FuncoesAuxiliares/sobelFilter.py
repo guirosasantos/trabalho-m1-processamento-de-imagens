@@ -20,7 +20,7 @@ def ApplySobelFilter(image):
     sobel = sobel*255/sobel.max()
     return np.array(sobel, dtype=np.uint8)
 
-def createPA(shape, center, radius=35, lpType=2, n=2):
+def createPA(shape, center, radius=35, lpType=0, n=2):
     rows, cols = shape[:2]
     r, c = np.mgrid[0:rows:1, 0:cols:1]
     c -= center[0]
