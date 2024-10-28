@@ -17,4 +17,10 @@ print.ShowImage(faceImage, 'Face')
 
 skinDetection.SkinSegmentation(faceImage, "Images/tiozao_skin.png")
 kmeans.KMeans3D(faceImage, imgNameOut="Images/tiozao_kmeans.png")
-seeding.Seeding(faceImage, imgNameOut="Images/tiozao_seeding.png")
+seeding.Seeding(
+    "Images/tiozao.jpg",
+    num_superpixels = 10000,
+    num_levels = 4,
+    prior = 2,
+    num_histogram_bins = 5,
+    num_iterations = 100)
