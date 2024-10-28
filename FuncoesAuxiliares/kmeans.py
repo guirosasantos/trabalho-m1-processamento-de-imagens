@@ -1,112 +1,107 @@
 import numpy as np
 import cv2
-import sys
-from random import randint as randi
-from math import sqrt
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from sklearn.cluster import KMeans
 
-def bgr2hex(bgr):
-   return "#%02x%02x%02x" % (int(bgr[2]), int(bgr[1]), int(bgr[0]))
+def visualize_cluster_distribution(pixel_values, labels, centers):
+    # Converte os centros dos clusters para valores RGB inteiros
+    centers = np.uint8(centers)
 
-def ScatterPlot(img, centroids, clutserLabels, plotNameOut="scatterPlot.png"):
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    for x in range(img.shape[0]):
-        for y in range(img.shape[1]):
-            ax.scatter(img[x, y, 2], img[x, y, 1], img[x, y, 0], color = bgr2hex(centroids[clutserLabels[x, y]]))
+    # Cria uma figura 3D
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Define os limites dos eixos
+    ax.set_xlim(0, 255)
+    ax.set_ylim(0, 255)
+    ax.set_zlim(0, 255)
+
+    # Define os rótulos dos eixos
+    ax.set_xlabel('Red')
+    ax.set_ylabel('Green')
+    ax.set_zlabel('Blue')
+
+    # Cria um array de cores para cada ponto baseado no cluster ao qual pertence
+    colors = centers[labels]
+
+    # Plotar os pixels no espaço RGB, coloridos de acordo com seu cluster
+    ax.scatter(pixel_values[:, 0], pixel_values[:, 1], pixel_values[:, 2],
+               c=colors / 255.0, s=1)
+
+    plt.title('Distribuição dos Clusters no Espaço RGB')
     plt.show()
-    plt.savefig(plotNameOut)
 
-def ShowCluster(img, centroids, clusterLabels, imgNameOut="out.png"):
-   result = np.zeros((img.shape), dtype=np.uint8)
-   for i in range(img.shape[0]):
-       for j in range(img.shape[1]):
-           bgr = centroids[clusterLabels[i, j]]
-           result[i, j, 0] = np.uint8(bgr[0])
-           result[i, j, 1] = np.uint8(bgr[1])
-           result[i, j, 2] = np.uint8(bgr[2])
-   cv2.imwrite(imgNameOut, result)
-   #some problem - it's not necessary
-   #TODO
-   ScatterPlot(img, centroids, clusterLabels, plotNameOut="scatterPlot.png")
-   cv2.imshow("K-Mean Cluster", result)
-   cv2.waitKey(0)
+def visualize_all_clusters(image_rgb, labels, centers):
+    num_clusters = len(centers)
+    plt.figure(figsize=(15, 5))
+    for i in range(num_clusters):
+        mask = (labels == i)
+        masked_image = np.copy(image_rgb)
+        masked_image = masked_image.reshape((-1, 3))
+        masked_image[~mask] = [0, 0, 0]  # Define outros clusters como preto
+        masked_image = masked_image.reshape(image_rgb.shape)
+        plt.subplot(1, num_clusters, i + 1)
+        plt.imshow(masked_image)
+        plt.title(f'Cluster {i}')
+        plt.axis('off')
+    plt.show()
 
-def GetEuclideanDistance(Cbgr, Ibgr):
-   b = float(Cbgr[0]) - float(Ibgr[0])
-   g = float(Cbgr[1]) - float(Ibgr[1])
-   r = float(Cbgr[2]) - float(Ibgr[2])
-   return sqrt(b*b + g*g + r*r)
+def KMeansImplementation(img, n_clusters=8, clusters_to_show=None):
+    # Convert BGR to RGB
+    image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    pixel_values = image_rgb.reshape((-1, 3))
+    pixel_values_float = np.float32(pixel_values)
 
-def KMeans3D(img, k=2, max_iterations=100, imgNameOut="out.png"):
-   '''
-   KMeans algorithm base to 3D data image (RGB)
-   input: 
-      img: image open using a library like OpenCV
-      k: number of segments
-      max_iterations: number max of interations to segment image 
-   '''
-   img = cv2.resize(img, None, fx=0.25, fy=0.25)
-   Clusters = k
-   # create the centroids of algorithm - each k is there is a center called "centroid"
-   centroids = np.zeros((k, 3), dtype=np.float64)  #for 5D, create a matrix of zeros with (k, 5)
-   for i in range(Clusters):
-      #start get the initial point of segmentation in X and Y coordinates 
-      x = randi(0, img.shape[0]-1)
-      y = randi(0, img.shape[1]-1)
-      #get the RGB (BGR) from img and divide in different matrix
-      b = float(img[x, y, 0])
-      g = float(img[x, y, 1])
-      r = float(img[x, y, 2])
+    # Apply KMeans
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    kmeans.fit(pixel_values_float)
+    centers = kmeans.cluster_centers_
+    labels = kmeans.labels_
 
-      centroids[i, 0] = b
-      centroids[i, 1] = g
-      centroids[i, 2] = r
-      #centroids[i, 3] = x
-      #centroids[i, 4] = y
-      #in 5D add too x and y in centroids
+    # Print cluster centers
+    print("Cluster Centers (RGB):")
+    for idx, center in enumerate(centers):
+        print(f"Cluster {idx}: {center}")
 
+    # Visualize all clusters
+    visualize_all_clusters(image_rgb, labels, centers)
 
-   print("Centroids:\n", centroids)
-   ClusterLabels = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
-   for i in range(max_iterations):
-       for x in range(img.shape[0]):
-           for y in range(img.shape[1]):
-               MinDist = sys.float_info.max
-               for c in range(Clusters):
-                   dist = GetEuclideanDistance(centroids[c], img[x, y])
-                   if dist <= MinDist:
-                       MinDist = dist
-                       ClusterLabels[x, y] = c
+    # Visualize cluster distribution in RGB space
+    visualize_cluster_distribution(pixel_values, labels, centers)
 
-       # update Mean of the clusters
-       MeanCluster = np.zeros((Clusters, 4), dtype=np.float64)
-       for x in range(img.shape[0]):
-           for y in range(img.shape[1]):
-               clusterNumber = ClusterLabels[x, y]
-               MeanCluster[clusterNumber, 0] += 1
-               MeanCluster[clusterNumber, 1] += float(img[x, y, 0])
-               MeanCluster[clusterNumber, 2] += float(img[x, y, 1])
-               MeanCluster[clusterNumber, 3] += float(img[x, y, 2])
-               #in 5D add too float(x) and float(y) in centroids
-       
-       copy = np.copy(centroids)
-       for c in range(Clusters):
-           # print("MeanCluster["+ str(c) +", 0]:", MeanCluster[c, 0])
-           centroids[c, 0] = MeanCluster[c, 1] / MeanCluster[c, 0]
-           centroids[c, 1] = MeanCluster[c, 2] / MeanCluster[c, 0]
-           centroids[c, 2] = MeanCluster[c, 3] / MeanCluster[c, 0]
-           #in 5D add too x (4) and y (5) in centroids
+    # Create segmented image
+    centers_uint8 = np.uint8(centers)
+    segmented_data = centers_uint8[labels.flatten()]
+    segmented_image = segmented_data.reshape(image_rgb.shape)
 
-       Same = True
-       for i in range(centroids.shape[0]):
-           for j in range(centroids.shape[1]):
-               if copy[i, j] != centroids[i, j]:
-                   Same = False
-                   break
-           if not Same:
-               break
-       if Same:
-           break
-   ShowCluster(img, centroids, ClusterLabels, imgNameOut)
+    # Display images
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 3, 1)
+    plt.imshow(image_rgb)
+    plt.title('Original Image')
+    plt.axis('off')
+
+    plt.subplot(1, 3, 2)
+    plt.imshow(segmented_image)
+    plt.title(f'Segmented Image with {n_clusters} Clusters')
+    plt.axis('off')
+
+    # Mask for specific clusters (optional)
+    if clusters_to_show is None:
+        clusters_to_show = [0]  # Default cluster to show if none provided
+
+    mask = np.isin(labels, clusters_to_show)
+    masked_image = np.copy(image_rgb)
+    masked_image = masked_image.reshape((-1, 3))
+    masked_image[~mask] = [0, 0, 0]  # Set other clusters to black
+    masked_image = masked_image.reshape(image_rgb.shape)
+
+    plt.subplot(1, 3, 3)
+    plt.imshow(masked_image)
+    plt.title(f'Clusters {clusters_to_show} Isolated')
+    plt.axis('off')
+
+    plt.show()
+
+    return segmented_image, masked_image
