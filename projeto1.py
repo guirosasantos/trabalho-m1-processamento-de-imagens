@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
-import morfologia as mf
+from FuncoesAuxiliares import morfologia as mf
 
 # Carregar a imagem
-imagem = cv2.imread("dedao.jpg")
+imagem = cv2.imread("Images/dedo.jpg")
 
 def aplicar_ruido_gaussiano(imagem, mean = 0, std_dev = 25):
     imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
