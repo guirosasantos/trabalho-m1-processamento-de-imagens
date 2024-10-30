@@ -2,48 +2,6 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-# Functions For Skin Based Thresholding 
-def RGB_Threshold(bgra):
-    b = float(bgra[0])
-    g = float(bgra[1])
-    r = float(bgra[2])
-    a = float(bgra[3])
-
-    E1 = r > 95
-    E2 = g > 40
-    E3 = b > 20
-    E4 = r > g
-    E5 = r > b
-    E6 = abs(r - g) > 15
-    E7 = a > 15
-
-    return E1 and E2 and E3 and E4 and E5 and E6 and E7
-
-def YCrCb_Threshold(yCrCb):
-    y = float(yCrCb[0])
-    Cr = float(yCrCb[1])
-    Cb = float(yCrCb[2])
-
-    E1 = Cr > 135
-    E2 = Cb > 85
-    E3 = y > 80
-    E4 = Cr <= (1.5862 * Cb) + 20
-    E5 = Cr >= (0.3448 * Cb) + 76.2069
-    E6 = Cr >= (-4.5652 * Cb) + 234.5652
-    E7 = Cr <= (-1.15 * Cb) + 301.75
-    E8 = Cr <= (-2.2857 * Cb) + 432.85
-
-    return E1 and E2 and E3 and E4 and E5 and E6 and E7 and E8
-
-def HSV_Threshold(hsv):
-    H = hsv[0] * 2.0  # Convert H to degrees (0-360)
-    S = hsv[1] / 255.0  # Normalize S to 0.0 - 1.0
-
-    E1 = 0.0 <= H <= 50.0
-    E2 = 0.23 <= S <= 0.68
-
-    return E1 and E2
-
 def Threshold(bgra, hsv, yCrCb):
     # RGB components
     b = float(bgra[0])
