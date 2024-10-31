@@ -68,6 +68,17 @@ def aplicar_ruido_gaussiano(imagem, mean=2, std_dev=20):
     ruido = np.random.normal(mean, std_dev, imagem_cinza.shape).astype(np.uint8)
     return cv2.add(imagem_cinza, ruido)
 
+def aplicar_ruido_sal_pimenta(imagem, prob = 0.05):
+    imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+    imagem_ruidosa = np.copy(imagem_cinza)
+    num_salt = np.ceil(prob * imagem_cinza.size * 0.5)
+    coords = [np.random.randint(0, i - 1, int(num_salt)) for i in imagem_cinza.shape]
+    imagem_ruidosa[coords[0], coords[1]] = 255
+    num_pepper = np.ceil(prob * imagem_cinza.size * 0.5)
+    coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in imagem_cinza.shape]
+    imagem_ruidosa[coords[0], coords[1]] = 0
+    return imagem_ruidosa
+
 def limiarizacao_otsu(imagem):
     T, imagem_otsu = cv2.threshold(imagem, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     print("Valor do limiar de Otsu:", T)
@@ -113,7 +124,7 @@ if imagem is None:
 imagem_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
 
 # Adicionar ruído e aplicar limiarizações
-imagem_ruidosa = aplicar_ruido_gaussiano(imagem)
+imagem_ruidosa = aplicar_ruido_sal_pimenta(imagem)
 _, thresh_binaria = cv2.threshold(imagem_ruidosa, 127, 255, cv2.THRESH_BINARY)
 imagem_otsu = limiarizacao_otsu(imagem_ruidosa)
 
@@ -151,19 +162,53 @@ show_image_individual(opened_otsu, "Otsu + Abertura")
 #imagem original com fechamento
 show_image_individual(close_original, "original + fechamento")
 
+show_image_individual(thresh_binaria, "Imagem com Limiarização Otsu")
+
+show_image_individual(imagem_otsu, "Imagem com Limiarização Básica")
+
 # Calcular e exibir as métricas entre a imagem original e as imagens processadas
-psnr_binaria, mse_binaria, rmse_binaria = CalculateMetrics(imagem_cinza, opened_binaria)
-psnr_otsu, mse_otsu, rmse_otsu = CalculateMetrics(imagem_cinza, opened_otsu)
+
+# Métricas para Abertura
+psnr_binaria_opened, mse_binaria_opened, rmse_binaria_opened = CalculateMetrics(imagem_cinza, opened_binaria)
+psnr_otsu_opened, mse_otsu_opened, rmse_otsu_opened = CalculateMetrics(imagem_cinza, opened_otsu)
+
+# Métricas para Fechamento
+psnr_binaria_closed, mse_binaria_closed, rmse_binaria_closed = CalculateMetrics(imagem_cinza, closed_binaria)
+psnr_otsu_closed, mse_otsu_closed, rmse_otsu_closed = CalculateMetrics(imagem_cinza, closed_otsu)
+
+# Métricas para Fechamento seguido de Abertura
+psnr_binaria_open_closed, mse_binaria_open_closed, rmse_binaria_open_closed = CalculateMetrics(imagem_cinza, open_closed_binaria)
+psnr_otsu_open_closed, mse_otsu_open_closed, rmse_otsu_open_closed = CalculateMetrics(imagem_cinza, open_closed_otsu)
 
 print("Métricas para Binária + Abertura:")
-print(f"MSE: {mse_binaria:.2f}")
-print(f"PSNR: {psnr_binaria:.2f} dB")
-print(f"RMSE: {rmse_binaria:.2f}")
+print(f"MSE: {mse_binaria_opened:.2f}")
+print(f"PSNR: {psnr_binaria_opened:.2f} dB")
+print(f"RMSE: {rmse_binaria_opened:.2f}")
 
 print("\nMétricas para Otsu + Abertura:")
-print(f"MSE: {mse_otsu:.2f}")
-print(f"PSNR: {psnr_otsu:.2f} dB")
-print(f"RMSE: {rmse_otsu:.2f}")
+print(f"MSE: {mse_otsu_opened:.2f}")
+print(f"PSNR: {psnr_otsu_opened:.2f} dB")
+print(f"RMSE: {rmse_otsu_opened:.2f}")
+
+print("\nMétricas para Binária + Fechamento:")
+print(f"MSE: {mse_binaria_closed:.2f}")
+print(f"PSNR: {psnr_binaria_closed:.2f} dB")
+print(f"RMSE: {rmse_binaria_closed:.2f}")
+
+print("\nMétricas para Otsu + Fechamento:")
+print(f"MSE: {mse_otsu_closed:.2f}")
+print(f"PSNR: {psnr_otsu_closed:.2f} dB")
+print(f"RMSE: {rmse_otsu_closed:.2f}")
+
+print("\nMétricas para Binária + Fechamento e Abertura:")
+print(f"MSE: {mse_binaria_open_closed:.2f}")
+print(f"PSNR: {psnr_binaria_open_closed:.2f} dB")
+print(f"RMSE: {rmse_binaria_open_closed:.2f}")
+
+print("\nMétricas para Otsu + Fechamento e Abertura:")
+print(f"MSE: {mse_otsu_open_closed:.2f}")
+print(f"PSNR: {psnr_otsu_open_closed:.2f} dB")
+print(f"RMSE: {rmse_otsu_open_closed:.2f}")
 
 # Exibir as imagens usando matplotlib (grid)
 def show_images(images, titles):
