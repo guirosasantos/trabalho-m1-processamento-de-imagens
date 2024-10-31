@@ -3,7 +3,7 @@ import cv2
 from tqdm import tqdm
 
 def Threshold(bgra, hsv, yCrCb):
-    # RGB components
+    # Extract individual color components
     b = float(bgra[0])
     g = float(bgra[1])
     r = float(bgra[2])
@@ -52,16 +52,52 @@ def Threshold(bgra, hsv, yCrCb):
 
     return Condition1 or Condition2
 
+
 # https://arxiv.org/ftp/arxiv/papers/1708/1708.02694.pdf
-def SkinSegmentation(img, imgNameOut="out.png"):
-    result = np.copy(img)
+def SkinSegmentation(img):
+    """
+    Detects skin regions in an image.
+
+    Parameters:
+    - img: Input image in BGR format.
+
+    Returns:
+    - skin_mask: A binary mask where skin pixels are 1 and non-skin pixels are 0.
+    """
+    skin_mask = np.zeros(img.shape[:2], dtype=np.uint8)
+
+    # Convert image to different color spaces
     bgra = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     yCrCb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
 
-    for i in tqdm(range(img.shape[0])):
+    for i in tqdm(range(img.shape[0]), desc="Skin Detection"):
         for j in range(img.shape[1]):
-            if not Threshold(bgra[i, j], hsv[i, j], yCrCb[i, j]):
-                result[i, j] = [0, 0, 0]  # Set pixel to black
+            if Threshold(bgra[i, j], hsv[i, j], yCrCb[i, j]):
+                skin_mask[i, j] = 1  # Mark skin pixels
 
-    cv2.imwrite(imgNameOut, result)
+    return skin_mask
+
+def ApplySkinMask(img, img_path):
+    """
+    Applies the skin mask to the image and returns the result.
+
+    Parameters:
+    - img: Input image in BGR format.
+
+    Returns:
+    - result: The image with the skin mask applied (non-skin regions set to black).
+    """
+    # Get the skin mask
+    skin_mask = SkinSegmentation(img)
+
+    # Convert the binary mask to 0 and 255 (required for bitwise operations)
+    skin_mask = (skin_mask * 255).astype(np.uint8)
+
+    # Apply the mask to the image
+    result = cv2.bitwise_and(img, img, mask=skin_mask)
+
+    cv2.imwrite(img_path, result)
+    return result
+
+
