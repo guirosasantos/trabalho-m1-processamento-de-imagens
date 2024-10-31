@@ -16,7 +16,7 @@ skinDetection.SkinSegmentation(faceImage, "Images/tiozao_skin.png")
 skinDetection.SkinSegmentation(secondFaceImage, "Images/tiozao2_skin.png")
 
 kmeans.KMeansImplementation(faceImage, clusters_to_show=[0,4])
-kmeans.KMeansImplementation(secondFaceImage, clusters_to_show=[0,3,6])
+kmeans.KMeansImplementation(secondFaceImage, clusters_to_show=[0,2,4,5])
 
 seeding.Seeding(
     "Images/tiozao.jpg",
